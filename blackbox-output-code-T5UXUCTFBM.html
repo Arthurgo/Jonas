@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churros Deliciosos - Loja Online</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4a261; /* Cor laranja para evocar churros */
+            color: #333;
+        }
+        header {
+            background-color: #e76f51;
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .hero {
+            text-align: center;
+            padding: 50px;
+        }
+        .product {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+        .product-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            margin: 10px;
+            padding: 20px;
+            width: 250px;
+            text-align: center;
+        }
+        .product-item img {
+            width: 100%;
+            height: auto;
+        }
+        button {
+            background-color: #e76f51;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .cart {
+            background-color: white;
+            padding: 20px;
+            margin: 20px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+    <script src="https://sdk.mercadopago.com/js/v2"></script> <!-- SDK para simulação de pagamentos -->
+</head>
+<body>
+    <header>
+        <h1>Bem-vindo à Loja de Churros Deliciosos!</h1>
+        <p>Os melhores churros fresquinhos para delivery ou retirada.</p>
+    </header>
+    
+    <section class="hero">
+        <h2>Experimente nossos churros hoje!</h2>
+        <p>De clássicos a recheados, pague com Pix ou cartão.</p>
+        <button onclick="viewCart()">Ver Carrinho</button>
+    </section>
+    
+    <section class="product">
+        <div class="product-item">
+            <img src="https://via.placeholder.com/200?text=Churro+Clássico" alt="Churro Clássico">
+            <h3>Churro Clássico</h3>
+            <p>Churro crocante, coberto de açúcar. Preço: R$ 5,00</p>
+            <button onclick="addToCart('Churro Clássico', 5.00)">Adicionar ao Carrinho</button>
+        </div>
+        
+        <div class="product-item">
+            <img src="https://via.placeholder.com/200?text=Churro+Recheado" alt="Churro Recheado">
+            <h3>Churro Recheado</h3>
+            <p>Recheado com chocolate. Preço: R$ 7,00</p>
+            <button onclick="addToCart('Churro Recheado', 7.00)">Adicionar ao Carrinho</button>
+        </div>
+    </section>
+    
+    <section class="cart" id="cartSection" style="display: none;">
+        <h2>Seu Carrinho</h2>
+        <ul id="cartItems"></ul>
+        <p>Total: R$ <span id="cartTotal">0.00</span></p>
+        <button onclick="checkout()">Finalizar Compra (Pix ou Cartão)</button>
+        <button onclick="clearCart()">Limpar Carrinho</button>
+    </section>
+    
+    <footer>
+        <p>Contato: (11) 1234-5678 | email@churrosdeliciosos.com.br</p>
+        <p>&copy; 2023 Churros Deliciosos. Todos os direitos reservados.</p>
+    </footer>
+    
+    <script>
+        let cart = [];
+        let total = 0;
+        
+        function addToCart(name, price) {
+            cart.push({ name: name, price: price });
+            total += price;
+            updateCartDisplay();
+            alert(`${name} adicionado ao carrinho!`);
+        }
+        
+        function updateCartDisplay() {
+            const cartItems = document.getElementById('cartItems');
+            cartItems.innerHTML = '';
+            cart.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${item.name} - R$ ${item.price.toFixed(2)}`;
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remover';
+                removeButton.onclick = () => removeFromCart(index);
+                li.appendChild(removeButton);
+                cartItems.appendChild(li);
+            });
+            document.getElementById('cartTotal').textContent = total.toFixed(2);
+        }
+        
+        function removeFromCart(index) {
+            if (index >= 0 && index < cart.length) {
+                total -= cart[index].price;
+                cart.splice(index, 1);
+                updateCartDisplay();
+                alert('Item removido do carrinho!');
+            }
+        }
+        
+        function viewCart() {
+            const cartSection = document.getElementById('cartSection');
+            cartSection.style.display = cartSection.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function clearCart() {
+            cart = [];
+            total = 0;
+            updateCartDisplay();
+            alert('Carrinho limpo!');
+        }
+        
+        function checkout() {
+            if (cart.length > 0) {
+                alert('Simulando redirecionamento para pagamento com Pix ou Cartão...');
+                // Aqui, em um site real, integraria com a API. Para teste:
+                const mp = new MercadoPago('TEST-123456789012345678-123456-abcdef1234567890', { // Use uma chave de teste
+                    locale: 'pt-BR'
+                });
+                const preference = {
+                    items: cart.map(item => ({
+                        title: item.name,
+                        unit_price: item.price,
+                        quantity: 1
+                    })),
+                    payment_methods: {
+                        excluded_payment_methods: [],
+                        excluded_payment_types: [],
+                        installments: 6  // Para cartões
+                    }
+                };
+                mp.preferences.create(preference).then(response => {
+                    window.open(response.body.init_point, '_blank');  // Abre o checkout de teste
+                }).catch(error => {
+                    alert('Erro na simulação: ' + error.message);
+                });
+            } else {
+                alert('Adicione itens ao carrinho primeiro!');
+            }
+        }
+    </script>
+</body>
+</html>
